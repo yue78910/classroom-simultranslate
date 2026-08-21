@@ -26,6 +26,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 data class DownloadUiState(
@@ -88,13 +89,16 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     val downloadStates: StateFlow<Map<String, DownloadUiState>> = _downloadStates.asStateFlow()
 
     fun startSession() {
+        if (_ui.value.sessionState == TranslationSessionState.RUNNING) return
         _ui.update {
             it.copy(
                 isRunning = true,
                 sessionState = TranslationSessionState.RUNNING,
             )
         }
-        coordinator.start(settings.sessionConfig())
+        viewModelScope.launch(Dispatchers.Default) {
+            coordinator.start(settings.sessionConfig())
+        }
     }
 
     fun pauseSession() {
@@ -110,12 +114,14 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun resumeSession() {
         if (_ui.value.sessionState != TranslationSessionState.PAUSED) return
-        coordinator.resume()
         _ui.update {
             it.copy(
                 isRunning = true,
                 sessionState = TranslationSessionState.RUNNING,
             )
+        }
+        viewModelScope.launch(Dispatchers.Default) {
+            coordinator.resume()
         }
     }
 

@@ -81,7 +81,7 @@ dependencies {
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.kotlinx.serialization.json)
 
-    implementation(libs.onnxruntime.android)
+    implementation(files("libs/onnxruntime-android-1.27.0.jar"))
     implementation(libs.sherpa.onnx)
     implementation(libs.commons.compress)
     implementation(libs.commons.io)
