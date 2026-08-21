@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "packs": [
+    {
+      "id": "asr-zh-en",
+      "label": "中英流式语音识别（Zipformer）",
+      "kind": "asr",
+      "type": "tar.bz2",
+      "url": "https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2",
+      "sha256": "",
+      "sizeBytes": 0,
+      "extractNames": [
+        "encoder-epoch-99-avg-1.int8.onnx",
+        "decoder-epoch-99-avg-1.onnx",
+        "joiner-epoch-99-avg-1.onnx",
+        "tokens.txt"
+      ]
+    },
+    {
+      "id": "nllb-600m-zh-en",
+      "label": "NLLB 中英离线翻译（约 1.1GB）",
+      "kind": "mt",
+      "type": "files",
+      "files": [
+        {
+          "name": "encoder_model_int8.onnx",
+          "url": "https://huggingface.co/tfchan-lab/nllb-200-distilled-600M-onnx/resolve/main/encoder_model_int8.onnx",
+          "sha256": "",
+          "sizeBytes": 0
+        },
+        {
+          "name": "decoder_model_int8.onnx",
+          "url": "https://huggingface.co/tfchan-lab/nllb-200-distilled-600M-onnx/resolve/main/decoder_model_int8.onnx",
+          "sha256": "",
+          "sizeBytes": 0
+        },
+        {
+          "name": "sentencepiece.bpe.model",
+          "url": "https://huggingface.co/facebook/nllb-200-distilled-600M/resolve/main/sentencepiece.bpe.model",
+          "sha256": "",
+          "sizeBytes": 0
+        }
+      ]
+    }
+  ]
+}

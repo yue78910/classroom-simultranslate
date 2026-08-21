@@ -1,0 +1,587 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>课堂同声传译 - 横屏预览图</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { margin: 0; padding: 0; background: #dfe6ed; }
+  #viewport { width: 1920px; height: 1080px; overflow: auto; }
+  .stage { transform-origin: 0 0; }
+  .toolbar {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.94);
+    box-shadow: 0 8px 24px rgba(19, 36, 58, 0.16);
+  }
+  .toolbar.hidden { display: none; }
+  .toolbar button {
+    height: 36px;
+    padding: 0 14px;
+    border: 1px solid #d4dde6;
+    border-radius: 6px;
+    background: #ffffff;
+    color: #173a5e;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .toolbar button:hover { background: #eef4f9; }
+  .toolbar .scale-label {
+    min-width: 48px;
+    text-align: center;
+    font-size: 15px;
+    font-weight: 700;
+    color: #41556b;
+  }
+
+  body {
+    font-family: "Microsoft YaHei", "PingFang SC", "Segoe UI", sans-serif;
+    color: #13243a;
+  }
+  .stage {
+    position: relative;
+    width: 1920px;
+    height: 1080px;
+    display: flex;
+    align-items: center;
+    padding: 72px 84px;
+    gap: 64px;
+    background:
+      linear-gradient(135deg, rgba(15, 108, 189, 0.08) 0%, rgba(232, 244, 241, 0) 46%),
+      linear-gradient(160deg, #f7fafd 0%, #eef7f4 52%, #e9f2fa 100%);
+  }
+  .deco-grid {
+    position: absolute;
+    inset: 0;
+    opacity: 0.35;
+    background-image:
+      linear-gradient(rgba(15, 108, 189, 0.08) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(15, 108, 189, 0.08) 1px, transparent 1px);
+    background-size: 56px 56px;
+    mask-image: linear-gradient(90deg, #000 0%, rgba(0,0,0,0.5) 58%, transparent 100%);
+  }
+  .accent-rule {
+    position: absolute;
+    left: 84px;
+    top: 128px;
+    width: 96px;
+    height: 10px;
+    border-radius: 5px;
+    background: linear-gradient(90deg, #0f6cbd 0%, #0e8a7d 100%);
+  }
+  .left {
+    position: relative;
+    z-index: 2;
+    flex: 0 0 750px;
+    padding-top: 18px;
+  }
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 18px;
+    border: 1px solid rgba(14, 138, 125, 0.35);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.72);
+    color: #0e8a7d;
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: 0;
+  }
+  .eyebrow::before {
+    content: "";
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #0e8a7d;
+  }
+  h1 {
+    margin-top: 34px;
+    font-size: 82px;
+    line-height: 1.08;
+    font-weight: 800;
+    color: #0f6cbd;
+    letter-spacing: 0;
+  }
+  .sub {
+    margin-top: 24px;
+    max-width: 700px;
+    font-size: 29px;
+    line-height: 1.55;
+    color: #41556b;
+    font-weight: 500;
+  }
+  .features {
+    margin-top: 40px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+    max-width: 690px;
+  }
+  .feature {
+    min-height: 96px;
+    padding: 20px 22px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.82);
+    border: 1px solid rgba(15, 108, 189, 0.14);
+    box-shadow: 0 10px 26px rgba(15, 108, 189, 0.08);
+  }
+  .feature strong {
+    display: block;
+    font-size: 25px;
+    color: #173a5e;
+    letter-spacing: 0;
+  }
+  .feature span {
+    display: block;
+    margin-top: 7px;
+    font-size: 18px;
+    line-height: 1.4;
+    color: #66788c;
+  }
+  .bottom-note {
+    margin-top: 34px;
+    font-size: 20px;
+    color: #78899b;
+    font-weight: 600;
+  }
+  .bottom-note b {
+    color: #b26a00;
+    font-weight: 800;
+  }
+  .right {
+    position: relative;
+    z-index: 2;
+    flex: 1;
+    display: flex;
+    justify-content: center;
+  }
+  .tablet {
+    width: 830px;
+    height: 528px;
+    padding: 16px;
+    border-radius: 38px;
+    background: linear-gradient(160deg, #243447 0%, #101a26 100%);
+    box-shadow:
+      0 42px 90px rgba(16, 26, 38, 0.32),
+      0 12px 30px rgba(16, 26, 38, 0.18);
+  }
+  .screen {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    border-radius: 26px;
+    overflow: hidden;
+    background: #ffffff;
+    padding: 16px 26px 20px;
+    display: flex;
+    flex-direction: column;
+  }
+  .status {
+    display: inline-flex;
+    align-items: center;
+    align-self: flex-start;
+    gap: 9px;
+    margin-top: 10px;
+    padding: 8px 15px;
+    border-radius: 999px;
+    background: #eaf7f4;
+    color: #0e8a7d;
+    font-size: 18px;
+    font-weight: 800;
+  }
+  .status .dot {
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    background: #0e8a7d;
+  }
+  .subtitle-box {
+    flex: 1;
+    min-height: 0;
+    position: relative;
+    margin-top: 12px;
+    border-radius: 8px;
+    border: 1px solid #e4ebf1;
+    background: #fbfdfe;
+    overflow: hidden;
+  }
+  .subtitle-content {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    padding: 16px 24px;
+    text-align: center;
+    z-index: 3;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+  }
+  .sub-pair {
+    font-weight: 700;
+    letter-spacing: 0;
+    text-align: center;
+  }
+  .sub-pair .en {
+    font-size: 13px;
+    line-height: 1.25;
+    color: #0f6cbd;
+    font-weight: 700;
+  }
+  .sub-pair .zh {
+    margin-top: 4px;
+    font-size: 16px;
+    font-weight: 800;
+    line-height: 1.22;
+    color: #21364d;
+  }
+  .scroll-hint {
+    position: absolute;
+    bottom: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 7px 14px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.94);
+    border: 1px solid #dce5ed;
+    color: #4b6075;
+    font-size: 15px;
+    font-weight: 800;
+    white-space: nowrap;
+    z-index: 4;
+    box-shadow: 0 6px 16px rgba(19, 36, 58, 0.10);
+  }
+  .spectrum {
+    margin-top: 10px;
+    width: 87.5%;
+    align-self: center;
+    height: 27px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 5px;
+    padding: 0 6px;
+  }
+  .spectrum .bar {
+    width: 4.5px;
+    border-radius: 4px;
+    background: linear-gradient(180deg, #0f6cbd 0%, #0e8a7d 100%);
+    transform-origin: 50% 100%;
+  }
+  .controls {
+    margin-top: 10px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+  }
+  .btn {
+    height: 52px;
+    border: 1px solid #dfe7ee;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #3c5065;
+    font-family: inherit;
+    font-size: 19px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+  .btn:disabled {
+    opacity: 0.45;
+    cursor: default;
+  }
+  .btn.start {
+    background: #16a34a;
+    border-color: #16a34a;
+    color: #ffffff;
+  }
+  .btn.stop {
+    background: #dc2626;
+    border-color: #dc2626;
+    color: #ffffff;
+  }
+
+  .video-mode .eyebrow,
+  .video-mode h1,
+  .video-mode .sub,
+  .video-mode .feature,
+  .video-mode .bottom-note {
+    animation: videoFadeUp 0.55s ease-out both;
+  }
+  .video-mode h1 { animation-delay: 0.15s; }
+  .video-mode .sub { animation-delay: 0.35s; }
+  .video-mode .feature:nth-child(1) { animation-delay: 0.55s; }
+  .video-mode .feature:nth-child(2) { animation-delay: 0.70s; }
+  .video-mode .feature:nth-child(3) { animation-delay: 0.85s; }
+  .video-mode .feature:nth-child(4) { animation-delay: 1.00s; }
+  .video-mode .bottom-note { animation-delay: 1.15s; }
+  .video-mode .right { animation: videoTabletIn 0.7s ease-out 0.40s both; }
+  .video-mode .subtitle-content .sub-pair:nth-child(1) {
+    animation:
+      videoSubIn 0.55s ease-out 1.30s both,
+      videoSubScroll 1.20s ease-in-out 3.60s both;
+  }
+  .video-mode .subtitle-content .sub-pair:nth-child(2) {
+    animation: videoSubIn 0.55s ease-out 2.10s both;
+  }
+  .video-mode .scroll-hint {
+    animation: videoHintPulse 1.80s ease-in-out 3.40s infinite both;
+  }
+  .video-mode .spectrum .bar {
+    animation: videoSpectrum 1.10s ease-in-out infinite;
+  }
+  .video-mode .spectrum .bar:nth-child(3n+1) {
+    animation-duration: 0.90s;
+    animation-delay: -0.15s;
+  }
+  .video-mode .spectrum .bar:nth-child(3n+2) {
+    animation-duration: 1.15s;
+    animation-delay: -0.30s;
+  }
+  .video-mode .spectrum .bar:nth-child(3n+3) {
+    animation-duration: 1.00s;
+    animation-delay: -0.45s;
+  }
+  .video-mode .btn.start {
+    animation: videoStartPulse 1.60s ease-in-out 2.60s infinite;
+  }
+
+  @keyframes videoFadeUp {
+    from { opacity: 0; transform: translateY(18px); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes videoTabletIn {
+    from { opacity: 0; transform: translateY(30px) scale(0.96); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes videoSubIn {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes videoSubScroll {
+    from { opacity: 1; transform: translateY(0); }
+    to { opacity: 0.18; transform: translateY(-44px); }
+  }
+  @keyframes videoHintPulse {
+    0%, 100% { opacity: 0.65; }
+    50% { opacity: 1; }
+  }
+  @keyframes videoSpectrum {
+    0%, 100% { transform: scaleY(0.30); }
+    50% { transform: scaleY(1.05); }
+  }
+  @keyframes videoStartPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(22, 163, 74, 0); }
+    50% { box-shadow: 0 0 0 12px rgba(22, 163, 74, 0.16); }
+  }
+</style>
+</head>
+<body>
+  <div id="viewport">
+  <div class="stage">
+    <div class="deco-grid"></div>
+    <div class="accent-rule"></div>
+
+    <div class="left">
+      <div class="eyebrow">横屏模式 · 中文为主 英文辅助</div>
+      <h1>课堂同声传译</h1>
+      <div class="sub">中文为主要字幕，英文像拼音一样紧贴在每行中文上方。内容自动居中，增多时旧字幕上移隐藏，随时上滑回看。</div>
+      <div class="features">
+        <div class="feature">
+          <strong>中文为主 · 英文辅助</strong>
+          <span>中文大字幕，英文贴行显示</span>
+        </div>
+        <div class="feature">
+          <strong>英文像拼音一样贴行</strong>
+          <span>每行中文上方紧贴英文</span>
+        </div>
+        <div class="feature">
+          <strong>自动居中 · 溢出上滑</strong>
+          <span>旧内容隐藏，新内容持续工作</span>
+        </div>
+        <div class="feature">
+          <strong>在线优先 · 自动离线回退</strong>
+          <span>断网也能继续翻译</span>
+        </div>
+      </div>
+      <div class="bottom-note">适用于 Android 平板横屏 · <b>可离线使用</b></div>
+    </div>
+
+    <div class="right">
+      <div class="tablet">
+          <div class="screen">
+          <div class="status"><span class="dot"></span>在线翻译</div>
+          <div class="subtitle-box">
+            <div class="subtitle-content">
+              <div class="sub-pair">
+                <div class="en">The professor is explaining 5G network slicing.</div>
+                <div class="zh">老师正在讲解 5G 网络切片。</div>
+              </div>
+              <div class="sub-pair">
+                <div class="en">Network slicing creates multiple virtual networks.</div>
+                <div class="zh">网络切片可以创建多个虚拟网络。</div>
+              </div>
+            </div>
+            <div class="scroll-hint">↑ 向上滑动查看完整字幕</div>
+          </div>
+          <div class="spectrum" id="spectrum"></div>
+          <div class="controls">
+            <button type="button" class="btn start" id="startBtn">开始</button>
+            <button type="button" class="btn stop" id="stopBtn" disabled>停止</button>
+            <button type="button" class="btn" id="clearBtn">清空</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  </div>
+  <div id="toolbar" class="toolbar">
+    <button type="button" id="fitBtn">适应窗口</button>
+    <button type="button" id="hundredBtn">100%</button>
+    <button type="button" id="zoomOutBtn">−</button>
+    <button type="button" id="zoomInBtn">＋</button>
+    <span id="scaleLabel" class="scale-label">100%</span>
+  </div>
+  <script>
+    (function () {
+      var viewport = document.getElementById("viewport");
+      var stage = document.querySelector(".stage");
+      var toolbar = document.getElementById("toolbar");
+      var scaleLabel = document.getElementById("scaleLabel");
+      var scale = 1;
+      var autoFit = true;
+      var isVideo = window.location.search.indexOf("video=1") !== -1;
+
+      var spectrum = document.getElementById("spectrum");
+      if (spectrum) {
+        var barHeights = [34, 66, 90, 46, 78, 32, 70, 54, 96, 40, 82, 60, 88, 38, 68, 52, 94, 44, 76, 58, 84, 36, 62, 48];
+        for (var i = 0; i < barHeights.length; i++) {
+          var bar = document.createElement("div");
+          bar.className = "bar";
+          bar.style.height = barHeights[i] + "%";
+          spectrum.appendChild(bar);
+        }
+      }
+
+      var startBtn = document.getElementById("startBtn");
+      var stopBtn = document.getElementById("stopBtn");
+      var translating = false;
+      var paused = false;
+
+      function renderControls() {
+        if (!translating && !paused) {
+          startBtn.textContent = "开始";
+          startBtn.disabled = false;
+          stopBtn.textContent = "停止";
+          stopBtn.disabled = true;
+        } else if (translating) {
+          startBtn.textContent = "开始";
+          startBtn.disabled = true;
+          stopBtn.textContent = "停止";
+          stopBtn.disabled = false;
+        } else {
+          startBtn.textContent = "继续";
+          startBtn.disabled = false;
+          stopBtn.textContent = "结束";
+          stopBtn.disabled = false;
+        }
+      }
+
+      startBtn.addEventListener("click", function () {
+        if (translating) return;
+        if (paused) paused = false;
+        translating = true;
+        renderControls();
+      });
+
+      stopBtn.addEventListener("click", function () {
+        if (translating) {
+          translating = false;
+          paused = true;
+        } else if (paused) {
+          paused = false;
+        }
+        renderControls();
+      });
+
+      renderControls();
+
+      if (isVideo) {
+        document.body.classList.add("video-mode");
+        viewport.style.width = "1920px";
+        viewport.style.height = "1080px";
+        viewport.style.overflow = "hidden";
+        toolbar.classList.add("hidden");
+        setTimeout(function () { startBtn.click(); }, 1800);
+        setTimeout(function () { stopBtn.click(); }, 4300);
+        setTimeout(function () { startBtn.click(); }, 6200);
+      }
+
+      function applyScale() {
+        stage.style.transform = "scale(" + scale + ")";
+        viewport.style.width = Math.round(1920 * scale) + "px";
+        viewport.style.height = Math.round(1080 * scale) + "px";
+        scaleLabel.textContent = Math.round(scale * 100) + "%";
+        if (window.innerWidth >= 1920 && window.innerHeight >= 1080 && Math.abs(scale - 1) < 0.001) {
+          toolbar.classList.add("hidden");
+        } else {
+          toolbar.classList.remove("hidden");
+        }
+      }
+
+      function fit() {
+        if (isVideo) {
+          scale = 1;
+          applyScale();
+          return;
+        }
+        var next = Math.min(window.innerWidth / 1920, window.innerHeight / 1080, 1);
+        scale = Math.max(0.2, Math.round(next * 100) / 100);
+        autoFit = true;
+        applyScale();
+      }
+
+      document.getElementById("fitBtn").addEventListener("click", fit);
+      document.getElementById("hundredBtn").addEventListener("click", function () {
+        scale = 1;
+        autoFit = false;
+        applyScale();
+      });
+      document.getElementById("zoomOutBtn").addEventListener("click", function () {
+        scale = Math.max(0.2, Math.round((scale - 0.1) * 100) / 100);
+        autoFit = false;
+        applyScale();
+      });
+      document.getElementById("zoomInBtn").addEventListener("click", function () {
+        scale = Math.min(2, Math.round((scale + 0.1) * 100) / 100);
+        autoFit = false;
+        applyScale();
+      });
+
+      window.addEventListener("resize", function () {
+        if (autoFit) fit();
+      });
+
+      if (isVideo) {
+        scale = 1;
+        applyScale();
+      } else {
+        fit();
+      }
+    })();
+  </script>
+</body>
+</html>
