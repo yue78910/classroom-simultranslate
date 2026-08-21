@@ -18,6 +18,7 @@ class SherpaAsr(
     private val stream: OnlineStream
 
     init {
+        System.loadLibrary("onnxruntime")
         val transducer = OnlineTransducerModelConfig().apply {
             encoder = files.encoder.absolutePath
             decoder = files.decoder.absolutePath
