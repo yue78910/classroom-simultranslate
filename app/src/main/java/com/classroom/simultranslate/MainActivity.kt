@@ -78,6 +78,7 @@ private fun AppRoot(viewModel: MainViewModel = viewModel()) {
                 onModeChange = viewModel::setMode,
                 onApiKeyChange = viewModel::setApiKey,
                 onFontScaleChange = viewModel::setFontScale,
+                onMirrorChange = viewModel::setUseMirror,
                 onOpenModels = { navController.navigate("models") },
             )
         }

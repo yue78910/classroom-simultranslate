@@ -16,6 +16,7 @@ import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream
 
 class DownloadManager(
     private val modelManager: ModelManager,
+    private val useMirror: () -> Boolean = { true },
     private val client: OkHttpClient = OkHttpClient.Builder()
         .connectTimeout(30, TimeUnit.SECONDS)
         .readTimeout(30, TimeUnit.SECONDS)
@@ -105,6 +106,31 @@ class DownloadManager(
             return
         }
 
+        val urls = if (useMirror()) {
+            listOf(DownloadMirror.mirror(url), url).distinct()
+        } else {
+            listOf(url)
+        }
+        var lastError: Exception? = null
+        for (candidate in urls) {
+            try {
+                downloadFrom(candidate, target, knownSize, expectedSha, onProgress)
+                return
+            } catch (e: Exception) {
+                lastError = e
+                target.delete()
+            }
+        }
+        throw lastError ?: error("下载失败")
+    }
+
+    private fun downloadFrom(
+        url: String,
+        target: File,
+        knownSize: Long,
+        expectedSha: String?,
+        onProgress: (Float, String) -> Unit,
+    ) {
         val resumeFrom = if (target.exists() && knownSize > 0) target.length() else 0L
         val request = Request.Builder()
             .url(url)

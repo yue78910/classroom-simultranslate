@@ -28,6 +28,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -55,6 +56,7 @@ fun SettingsScreen(
     onModeChange: (EngineMode) -> Unit,
     onApiKeyChange: (String) -> Unit,
     onFontScaleChange: (Float) -> Unit,
+    onMirrorChange: (Boolean) -> Unit,
     onOpenModels: () -> Unit,
 ) {
     var apiKey by remember { mutableStateOf("") }
@@ -166,6 +168,29 @@ fun SettingsScreen(
                         "%.1fx".format(ui.fontScale),
                         style = MaterialTheme.typography.bodySmall,
                     )
+                }
+            }
+
+            Card {
+                Column(Modifier.fillMaxWidth().padding(16.dp)) {
+                    Row(
+                        Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                    ) {
+                        Column(Modifier.weight(1f)) {
+                            Text("镜像加速下载", style = MaterialTheme.typography.titleMedium)
+                            Text(
+                                "Hugging Face 走 hf-mirror，GitHub 走 ghfast，失败自动回退官方源",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                        Switch(
+                            checked = ui.useMirror,
+                            onCheckedChange = onMirrorChange,
+                        )
+                    }
                 }
             }
 

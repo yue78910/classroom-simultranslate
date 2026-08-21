@@ -44,12 +44,16 @@ data class HomeUiState(
     val isRunning: Boolean = false,
     val sessionState: TranslationSessionState = TranslationSessionState.IDLE,
     val fontScale: Float = 1.4f,
+    val useMirror: Boolean = true,
 )
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val settings = SettingsRepository(application)
     private val modelManager = ModelManager(application)
-    private val downloadManager = DownloadManager(modelManager)
+    private val downloadManager = DownloadManager(
+        modelManager,
+        useMirror = { settings.useMirror },
+    )
     private val audioCapture = AudioCapture()
     private val onlineEngine = OnlineRealtimeEngine()
     private val offlineEngine = OfflineEngine(modelManager, viewModelScope, application.assets)
@@ -69,6 +73,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             mode = settings.mode,
             hasApiKey = settings.apiKey.isNotBlank(),
             fontScale = settings.subtitleFontScale,
+            useMirror = settings.useMirror,
         ),
     )
     val ui: StateFlow<HomeUiState> = _ui.asStateFlow()
@@ -146,6 +151,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun setFontScale(scale: Float) {
         settings.subtitleFontScale = scale
         _ui.update { it.copy(fontScale = scale) }
+    }
+
+    fun setUseMirror(enabled: Boolean) {
+        settings.useMirror = enabled
+        _ui.update { it.copy(useMirror = enabled) }
     }
 
     fun downloadPack(pack: OfflineModelPack) {

@@ -7,7 +7,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 class ModelManager(private val context: Context) {
-    private val root: File by lazy { File(context.filesDir, "offline_models") }
+    private val root: File by lazy {
+        context.getExternalFilesDir("offline_models") ?: File(context.filesDir, "offline_models")
+    }
 
     private val _installedPacks = MutableStateFlow<Set<String>>(readInstalled())
     val installedPacks: StateFlow<Set<String>> = _installedPacks.asStateFlow()
@@ -80,4 +82,3 @@ data class MtFiles(
     val decoder: File,
     val tokenizer: File,
 )
-

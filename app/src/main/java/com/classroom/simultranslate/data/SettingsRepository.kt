@@ -38,6 +38,10 @@ class SettingsRepository(context: Context) {
         get() = prefs.getFloat(KEY_FONT_SCALE, 1.4f)
         set(value) = prefs.edit().putFloat(KEY_FONT_SCALE, value).apply()
 
+    var useMirror: Boolean
+        get() = prefs.getBoolean(KEY_USE_MIRROR, true)
+        set(value) = prefs.edit().putBoolean(KEY_USE_MIRROR, value).apply()
+
     fun sessionConfig() = SessionConfig(
         direction = direction,
         mode = mode,
@@ -49,6 +53,6 @@ class SettingsRepository(context: Context) {
         const val KEY_DIRECTION = "direction"
         const val KEY_MODE = "mode"
         const val KEY_FONT_SCALE = "font_scale"
+        const val KEY_USE_MIRROR = "use_mirror"
     }
 }
-
